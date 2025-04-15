@@ -1,23 +1,28 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+    }
+
     stages {
         stage('Build') {
             steps {
                 echo 'Building...'
-                sh 'ls -l'
             }
         }
 
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
+        stage('Deploy to DockerHub') {
+            when {
+                branch 'dev'
             }
-        }
-
-        stage('Deploy') {
             steps {
-                echo 'Deploying...'
+                echo "Pushing Docker image..."
+                sh """
+                    docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW}
+                    docker build -t milagjorgoska/jenkins-test .
+                    docker push milagjorgoska/jenkins-test
+                """
             }
         }
     }
